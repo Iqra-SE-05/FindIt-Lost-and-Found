@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report an Item | FindIt</title>
+  <style>
+    :root {
+      --navy: #142b45;
+      --blue: #2864e8;
+      --teal: #13b8a6;
+      --light: #f4f7fb;
+      --text: #25344a;
+      --muted: #718096;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--light);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    header {
+      background: white;
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e5ebf3;
+    }
+
+    .logo { font-size: 27px; font-weight: 800; color: var(--navy); }
+    .logo span { color: var(--blue); }
+    nav { display: flex; align-items: center; gap: 24px; }
+    nav a { font-size: 14px; font-weight: 600; }
+
+    .page-heading {
+      text-align: center;
+      padding: 45px 20px 25px;
+    }
+
+    .eyebrow {
+      color: #087d70;
+      background: #d9f7f0;
+      display: inline-block;
+      padding: 6px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      color: var(--navy);
+      font-size: clamp(30px, 5vw, 43px);
+      margin: 15px 0 8px;
+      letter-spacing: -1px;
+    }
+
+    .page-heading p { color: var(--muted); }
+
+    .layout {
+      max-width: 1050px;
+      margin: 15px auto 60px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 310px;
+      gap: 25px;
+      align-items: start;
+    }
+
+    .form-card, .side-card {
+      background: white;
+      border: 1px solid #e5ebf3;
+      border-radius: 17px;
+      padding: 28px;
+      box-shadow: 0 8px 25px #193c6507;
+    }
+
+    .form-card h2 { color: var(--navy); font-size: 22px; margin-bottom: 5px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 25px; }
+
+    .field { margin-bottom: 19px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid #dce4ee;
+      border-radius: 9px;
+      background: white;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px #2864e815;
+    }
+
+    textarea { resize: vertical; min-height: 110px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    .type-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .type-option {
+      border: 1px solid #dce4ee;
+      padding: 15px;
+      border-radius: 11px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .type-option input { width: auto; margin-right: 6px; accent-color: var(--blue); }
+    .type-option:has(input:checked) { border-color: var(--blue); background: #eff4ff; }
+
+    .privacy-note {
+      background: #eef8f6;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      color: #28675e;
+      margin-bottom: 20px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      background: var(--blue);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover { background: #194fc7; }
+
+    .side-card { margin-bottom: 18px; }
+    .side-card h3 { color: var(--navy); margin-bottom: 12px; font-size: 17px; }
+    .side-card p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .tip { display: flex; align-items: start; gap: 10px; margin: 14px 0; font-size: 13px; }
+    .tip span { color: var(--teal); font-weight: bold; }
+
+    .success {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #e0f8ed;
+      color: #126a49;
+      overflow-wrap: anywhere;
+    }
+
+    footer { text-align: center; padding: 25px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 760px) {
+      header { padding: 15px 5%; flex-wrap: wrap; gap: 12px; }
+      nav { gap: 14px; flex-wrap: wrap; }
+      .layout { grid-template-columns: 1fr; padding: 0 14px; }
+      .form-card, .side-card { padding: 20px; }
+      .two-col { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo" href="index.html">Find<span>It.</span></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="index.html#recent">Browse Reports</a>
+    </nav>
+  </header>
+
+  <div class="page-heading">
+    <span class="eyebrow">HELP YOUR COMMUNITY</span>
+    <h1>Report an Item</h1>
+    <p>Every report brings someone one step closer to a reunion.</p>
+  </div>
+
+  <main class="layout">
+    <div class="form-card">
+      <h2>Item details</h2>
+      <p class="subtitle">Share accurate information to help identify the item.</p>
+
+      <form id="reportForm">
+        <div class="field">
+          <label>What would you like to report? *</label>
+          <div class="type-options">
+            <label class="type-option">
+              <input type="radio" name="type" value="Lost" checked required>
+              I lost something
+            </label>
+            <label class="type-option">
+              <input type="radio" name="type" value="Found" required>
+              I found something
+            </label>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="itemName">Item name *</label>
+            <input id="itemName" name="itemName" placeholder="e.g. Black wallet" required maxlength="100">
+          </div>
+          <div class="field">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+              <option value="">Select category</option>
+              <option>Electronics</option>
+              <option>Bags & Wallets</option>
+              <option>Documents</option>
+              <option>Keys</option>
+              <option>Jewellery</option>
+              <option>Clothing</option>
+              <option>Pets</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="city">City *</label>
+            <input id="city" name="city" placeholder="e.g. Lahore" required maxlength="80">
+          </div>
+          <div class="field">
+            <label for="area">Area / Approx. location *</label>
+            <input id="area" name="area" placeholder="e.g. Johar Town" required maxlength="120">
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="date">Date lost or found *</label>
+            <input type="date" id="date" name="date" required>
+          </div>
+          <div class="field">
+            <label for="color">Item colour</label>
+            <input id="color" name="color" placeholder="e.g. Black" maxlength="50">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description and identifying details *</label>
+          <textarea id="description" name="description" placeholder="Describe the item, where it was lost/found and any helpful identifying details..." required maxlength="1000"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="contactName">Your name *</label>
+          <input id="contactName" name="contactName" placeholder="Enter your name" required maxlength="100">
+        </div>
+
+        <div class="field">
+          <label for="contactEmail">Contact email *</label>
+          <input type="email" id="contactEmail" name="contactEmail" placeholder="you@example.com" required maxlength="150">
+        </div>
+
+        <div class="privacy-note">
+          🔒 Prototype privacy note: this form stores reports in this browser only. Do not enter sensitive personal information. Reports are not automatically shared with other users.
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Report →</button>
+        <div id="successMessage" class="success" role="status"></div>
+      </form>
+    </div>
+
+    <aside>
+      <div class="side-card">
+        <h3>💡 Tips for a useful report</h3>
+        <div class="tip"><span>✓</span><p>Use a clear, recognisable item name.</p></div>
+        <div class="tip"><span>✓</span><p>Include the city and approximate area.</p></div>
+        <div class="tip"><span>✓</span><p>Mention the date and distinguishing features.</p></div>
+        <div class="tip"><span>✓</span><p>Keep sensitive details such as full ID numbers private.</p></div>
+      </div>
+
+      <div class="side-card">
+        <h3>🛡️ Stay safe</h3>
+        <p>Verify ownership before returning an item. Meet in a safe public place and never publish passwords, bank details or full identity numbers.</p>
+      </div>
+
+      <div class="side-card">
+        <h3>Looking for something?</h3>
+        <p>Browse the current sample reports on the FindIt homepage.</p>
+        <a href="index.html#recent" style="color:#2864e8;font-size:14px;font-weight:bold">Browse Reports →</a>
+      </div>
+    </aside>
+  </main>
+
+  <footer>© 2026 FindIt. Helping people reconnect with their belongings.</footer>
+
+  <script>
+    const reportForm = document.getElementById("reportForm");
+    const successMessage = document.getElementById("successMessage");
+
+    document.getElementById("date").max = new Date().toISOString().split("T")[0];
+
+    reportForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const formData = new FormData(reportForm);
+      const report = Object.fromEntries(formData.entries());
+      report.id = "FI" + Date.now();
+      report.createdAt = new Date().toISOString();
+
+      try {
+        const reports = JSON.parse(localStorage.getItem("finditReports") || "[]");
+        reports.unshift(report);
+        localStorage.setItem("finditReports", JSON.stringify(reports));
+
+        successMessage.style.display = "block";
+        successMessage.innerHTML =
+          "<strong>Report saved successfully!</strong><br>" +
+          "Your reference number: <strong>" + report.id + "</strong><br>" +
+          "This report is saved in this browser only. It is not yet visible to other visitors.";
+
+        reportForm.reset();
+        document.querySelector('input[name="type"][value="Lost"]').checked = true;
+      } catch (error) {
+        successMessage.style.display = "block";
+        successMessage.textContent =
+          "The report could not be saved. Please check your browser storage and try again.";
+      }
+    });
+  </script>
+</body>
+</html>
