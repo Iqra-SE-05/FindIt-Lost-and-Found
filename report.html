@@ -496,10 +496,16 @@
       } catch (error) {
         console.error("FindIt report submission error:", error);
         successMessage.style.display = "block";
-        successMessage.textContent =
-          error.message && error.message.includes("Please add your Supabase")
-            ? error.message
-            : "Report submit nahi hui. Please check your Supabase URL, Publishable key, database columns, and insert policy, then try again.";
+        
+successMessage.textContent =
+  "Database error: " +
+  [
+    error?.message,
+    error?.details,
+    error?.hint,
+    error?.code
+  ].filter(Boolean).join(" | ");
+
       } finally {
         submitButton.disabled = false;
         submitButton.textContent = "Submit Report →";
