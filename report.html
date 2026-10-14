@@ -431,37 +431,78 @@
 
   <footer>© 2026 FindIt. Helping people reconnect with their belongings.</footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const reportForm = document.getElementById("reportForm");
     const successMessage = document.getElementById("successMessage");
 
-    document.getElementById("date").max = new Date().toISOString().split("T")[0];
+    // Replace these two values with your Supabase Project URL and Publishable key.
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
 
-    reportForm.addEventListener("submit", function(event) {
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    document.getElementById("date").max =
+      new Date().toISOString().split("T")[0];
+
+    reportForm.addEventListener("submit", async function (event) {
       event.preventDefault();
 
+      const submitButton = reportForm.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+      successMessage.style.display = "none";
+
       const formData = new FormData(reportForm);
-      const report = Object.fromEntries(formData.entries());
-      report.id = "FI" + Date.now();
-      report.createdAt = new Date().toISOString();
+      const report = {
+        report_type: formData.get("type"),
+        title: String(formData.get("itemName") || "").trim(),
+        category: formData.get("category"),
+        city: String(formData.get("city") || "").trim(),
+        location: String(formData.get("area") || "").trim(),
+        item_date: formData.get("date") || null,
+        item_color: String(formData.get("color") || "").trim() || null,
+        description: String(formData.get("description") || "").trim(),
+        contact_name: String(formData.get("contactName") || "").trim(),
+        contact_email: String(formData.get("contactEmail") || "").trim(),
+        status: "Open"
+      };
 
       try {
-        const reports = JSON.parse(localStorage.getItem("finditReports") || "[]");
-        reports.unshift(report);
-        localStorage.setItem("finditReports", JSON.stringify(reports));
+        if (
+          SUPABASE_URL === "YOUR_SUPABASE_PROJECT_URL" ||
+          SUPABASE_PUBLISHABLE_KEY === "YOUR_SUPABASE_PUBLISHABLE_KEY"
+        ) {
+          throw new Error("Please add your Supabase Project URL and Publishable key in report.html.");
+        }
 
+        const { error } = await supabaseClient
+          .from("reports")
+          .insert([report]);
+
+        if (error) throw error;
+
+        const reference = "FI" + Date.now().toString().slice(-8);
         successMessage.style.display = "block";
-        successMessage.innerHTML =
-          "<strong>Report saved successfully!</strong><br>" +
-          "Your reference number: <strong>" + report.id + "</strong><br>" +
-          "This report is saved in this browser only. It is not yet visible to other visitors.";
+        successMessage.textContent =
+          "Report submitted successfully! Your reference number: " + reference +
+          ". Keep this number for your records.";
 
         reportForm.reset();
         document.querySelector('input[name="type"][value="Lost"]').checked = true;
       } catch (error) {
+        console.error("FindIt report submission error:", error);
         successMessage.style.display = "block";
         successMessage.textContent =
-          "The report could not be saved. Please check your browser storage and try again.";
+          error.message && error.message.includes("Please add your Supabase")
+            ? error.message
+            : "Report submit nahi hui. Please check your Supabase URL, Publishable key, database columns, and insert policy, then try again.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit Report →";
       }
     });
   </script>
