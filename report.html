@@ -115,6 +115,61 @@
     }
 
     textarea { resize: vertical; min-height: 110px; }
+
+    .upload-box {
+      border: 2px dashed #b9c7dc;
+      border-radius: 12px;
+      padding: 22px;
+      text-align: center;
+      background: #f9fbff;
+    }
+    .upload-icon {
+      display: block;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .upload-box p { color: var(--muted); font-size: 13px; margin: 6px 0 12px; }
+    .upload-btn {
+      display: inline-block;
+      background: #eee9ff;
+      color: #5934b5;
+      padding: 10px 16px;
+      border-radius: 9px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .upload-box input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .image-preview {
+      display: none;
+      margin-top: 15px;
+      text-align: left;
+    }
+    .image-preview img {
+      display: block;
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: white;
+      border: 1px solid #e5ebf3;
+    }
+    .remove-image {
+      margin-top: 8px;
+      border: 0;
+      background: transparent;
+      color: #c03950;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .image-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
     .type-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -266,6 +321,22 @@
         </div>
 
         <div class="field">
+          <label for="itemImage">Item photo (optional)</label>
+          <div class="upload-box">
+            <span class="upload-icon" aria-hidden="true">📸</span>
+            <strong>Upload the original item photo</strong>
+            <p>Choose a photo from your phone or computer. JPG, PNG, or WebP; up to 10 MB.</p>
+            <label class="upload-btn" for="itemImage">＋ Choose Image</label>
+            <input type="file" id="itemImage" name="itemImage" accept="image/jpeg,image/png,image/webp">
+            <div class="image-preview" id="imagePreview">
+              <img id="previewImage" alt="Preview of the selected item">
+              <button type="button" class="remove-image" id="removeImage">Remove image</button>
+            </div>
+          </div>
+          <p class="image-note">Privacy tip: avoid uploading photos that show ID numbers, addresses, or other sensitive details.</p>
+        </div>
+
+        <div class="field">
           <label for="contactName">Your name *</label>
           <input id="contactName" name="contactName" placeholder="Enter your name" required maxlength="100">
         </div>
@@ -276,7 +347,7 @@
         </div>
 
         <div class="privacy-note">
-          🔒 Prototype privacy note: this form stores reports in this browser only. Do not enter sensitive personal information. Reports are not automatically shared with other users.
+          🔒 Prototype privacy note: reports and selected photos are saved in this browser only. They are not uploaded to the internet or automatically visible to other visitors.
         </div>
 
         <button type="submit" class="submit-btn">Submit Report →</button>
@@ -311,14 +382,83 @@
   <script>
     const reportForm = document.getElementById("reportForm");
     const successMessage = document.getElementById("successMessage");
+    const itemImageInput = document.getElementById("itemImage");
+    const imagePreview = document.getElementById("imagePreview");
+    const previewImage = document.getElementById("previewImage");
+    const removeImageButton = document.getElementById("removeImage");
+    let selectedImageData = "";
 
     document.getElementById("date").max = new Date().toISOString().split("T")[0];
 
-    reportForm.addEventListener("submit", function(event) {
+    itemImageInput.addEventListener("change", function () {
+      const file = itemImageInput.files && itemImageInput.files[0];
+
+      if (!file) {
+        clearSelectedImage();
+        return;
+      }
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Please choose a JPG, PNG, or WebP image.");
+        itemImageInput.value = "";
+        clearSelectedImage();
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert("Image size must be 10 MB or less.");
+        itemImageInput.value = "";
+        clearSelectedImage();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const image = new Image();
+        image.onload = function () {
+          // Resize/compress the photo so browser storage is less likely to fill up.
+          const maxSide = 900;
+          const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          const context = canvas.getContext("2d");
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          selectedImageData = canvas.toDataURL("image/jpeg", 0.72);
+          previewImage.src = selectedImageData;
+          imagePreview.style.display = "block";
+        };
+        image.onerror = function () {
+          alert("This image could not be opened. Please choose another image.");
+          itemImageInput.value = "";
+          clearSelectedImage();
+        };
+        image.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function clearSelectedImage() {
+      selectedImageData = "";
+      previewImage.removeAttribute("src");
+      imagePreview.style.display = "none";
+      itemImageInput.value = "";
+    }
+
+    removeImageButton.addEventListener("click", clearSelectedImage);
+
+    reportForm.addEventListener("submit", async function (event) {
       event.preventDefault();
+
+      const submitButton = reportForm.querySelector(".submit-btn");
+      submitButton.disabled = true;
+      submitButton.textContent = "Saving report...";
 
       const formData = new FormData(reportForm);
       const report = Object.fromEntries(formData.entries());
+      delete report.itemImage; // Do not try to store the raw File object.
+      report.imageData = selectedImageData || "";
       report.id = "FI" + Date.now();
       report.createdAt = new Date().toISOString();
 
@@ -328,17 +468,29 @@
         localStorage.setItem("finditReports", JSON.stringify(reports));
 
         successMessage.style.display = "block";
-        successMessage.innerHTML =
-          "<strong>Report saved successfully!</strong><br>" +
-          "Your reference number: <strong>" + report.id + "</strong><br>" +
-          "This report is saved in this browser only. It is not yet visible to other visitors.";
+        successMessage.textContent = "";
+        const title = document.createElement("strong");
+        title.textContent = "Report saved successfully!";
+        const line1 = document.createElement("br");
+        const label = document.createTextNode("Your reference number: ");
+        const reference = document.createElement("strong");
+        reference.textContent = report.id;
+        const line2 = document.createElement("br");
+        const note = document.createTextNode(
+          "This report and its photo are saved in this browser only. Other visitors cannot see them yet."
+        );
+        successMessage.append(title, line1, label, reference, line2, note);
 
         reportForm.reset();
         document.querySelector('input[name="type"][value="Lost"]').checked = true;
+        clearSelectedImage();
       } catch (error) {
         successMessage.style.display = "block";
         successMessage.textContent =
-          "The report could not be saved. Please check your browser storage and try again.";
+          "The report could not be saved. Browser storage may be full. Try a smaller photo or remove older saved reports.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit Report →";
       }
     });
   </script>
